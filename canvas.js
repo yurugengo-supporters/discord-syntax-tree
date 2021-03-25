@@ -94,16 +94,8 @@ exports.Canvas = class {
   }
 
   download(fn) {
-    // const image = this.canvas.toDataURL('image/png')
-    //                   .replace('image/png', 'image/octet-stream');
     const image = this.canvas.toBuffer('image/png');
-    // const link = document.createElement('a');
-    // link.setAttribute('href', image);
-    // link.setAttribute('download', fn);
-    // link.click();
-    // link.remove();
-    // console.log(image);
-    fs.writeFile('test.png', image, err => {
+    fs.writeFile('syntax_tree.png', image, err => {
       if (err) {
         console.error(err);
       }
