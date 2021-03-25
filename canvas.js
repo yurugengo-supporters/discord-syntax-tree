@@ -93,12 +93,8 @@ exports.Canvas = class {
     ctx.stroke();
   }
 
+  // Return an image buffer.
   download(fn) {
-    const image = this.canvas.toBuffer('image/png');
-    fs.writeFile('syntax_tree.png', image, err => {
-      if (err) {
-        console.error(err);
-      }
-    });
+    return this.canvas.toBuffer('image/png');
   }
 }

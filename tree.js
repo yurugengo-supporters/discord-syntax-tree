@@ -146,7 +146,7 @@ exports.Tree = class {
   }
 
   download() {
-    this.canvas.download('syntax_tree.png');
+    return this.canvas.download('syntax_tree.png');
   }
 }
 
