@@ -2,8 +2,9 @@
 // (c)2019 Andre Eisenbach <andre@ironcreek.net>
 
 'use strict';
+const fs = require("fs");
 
-export default class Canvas {
+exports.Canvas = class {
   constructor(c) {
     this.canvas = c;
     this.font = 'sans-serif';
@@ -93,12 +94,19 @@ export default class Canvas {
   }
 
   download(fn) {
-    const image = this.canvas.toDataURL('image/png')
-                      .replace('image/png', 'image/octet-stream');
-    const link = document.createElement('a');
-    link.setAttribute('href', image);
-    link.setAttribute('download', fn);
-    link.click();
-    link.remove();
+    // const image = this.canvas.toDataURL('image/png')
+    //                   .replace('image/png', 'image/octet-stream');
+    const image = this.canvas.toBuffer('image/png');
+    // const link = document.createElement('a');
+    // link.setAttribute('href', image);
+    // link.setAttribute('download', fn);
+    // link.click();
+    // link.remove();
+    // console.log(image);
+    fs.writeFile('test.png', image, err => {
+      if (err) {
+        console.error(err);
+      }
+    });
   }
 }

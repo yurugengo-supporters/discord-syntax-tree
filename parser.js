@@ -3,15 +3,16 @@
 
 'use strict';
 
-import * as Tokenizer from './tokenizer.js';
+const Tokenizer = require("./tokenizer");
 
-export const NodeType = {
+const NodeType = {
   ROOT: 'ROOT',
   NODE: 'NODE',
   VALUE: 'VALUE'
 };
+exports.NodeType = NodeType;
 
-export function parse(tokens) {
+exports.parse = function (tokens) {
   const root = {type: NodeType.ROOT, label: '__ROOT__', values: []};
   let node = null
   let current = 0;

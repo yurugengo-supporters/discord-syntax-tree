@@ -5,10 +5,10 @@
 
 const NODE_PADDING = 20;
 
-import Canvas from './canvas.js';
-import * as Parser from './parser.js';
+const Canvas = require("./canvas");
+const Parser = require("./parser");
 
-export default class Tree {
+exports.Tree = class {
   constructor(canvas) {
     this.nodecolor = true;
     this.fontsize = 16;
@@ -21,7 +21,7 @@ export default class Tree {
 
   resizeCanvas(w, h) {
     this.canvas.resize(w, h);
-    this.canvas.translate(0, canvas.fontsize / 2);
+    this.canvas.translate(0, this.canvas.fontsize / 2);
   }
 
   draw(syntax_tree) {
@@ -41,7 +41,7 @@ export default class Tree {
         drawables.width + 1,
         Math.max(
             (max_depth + 1) * (this.fontsize * this.vscaler * 3),
-            has_arrow ? arrowSet.maxBottom * arrowScaler : 0));
+            has_arrow ? arrowSet.maxBottom * arrowScaler + 10: 0)); // added a +10 to avoid clipping bottom
     drawables.children.forEach(child => this.drawNode(child));
     this.drawArrows(arrowSet.arrows);
   }
@@ -113,7 +113,7 @@ export default class Tree {
   }
 
   setCanvas(c) {
-    this.canvas = new Canvas(c);
+    this.canvas = new Canvas.Canvas(c);
   }
 
   setColor(e) {

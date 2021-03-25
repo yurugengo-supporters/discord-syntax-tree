@@ -3,7 +3,7 @@
 
 'use strict';
 
-export const TokenType = {
+const TokenType = {
   BRACKET_OPEN: 'BRACKET_OPEN',
   BRACKET_CLOSE: 'BRACKET_CLOSE',
   STRING: 'STRING',
@@ -14,15 +14,17 @@ export const TokenType = {
   ARROW_FROM: 'ARROW_FROM',
   ARROW_BOTH: 'ARROW_BOTH'
 };
+exports.TokenType = TokenType;
 
-export class Token {
+const Token = class {
   constructor(type, value = null) {
     this.type = type;
     this.value = value;
   }
 }
+exports.Token = Token;
 
-export function tokenize(input) {
+exports.tokenize = function (input) {
   const parsers = [
     skipWhitespace, parseControlCharacters, parseArrows, parseNumber,
     parseString, parseQuotedString
