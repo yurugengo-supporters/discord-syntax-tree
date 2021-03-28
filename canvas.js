@@ -9,7 +9,7 @@ exports.Canvas = class {
     this.canvas = c;
     this.font = 'sans-serif';
     this.fontsize = 16;
-    this.context = c.getContext('2d');
+    this.context = c.getContext('2d', {alpha: false});
   }
 
   resize(w, h) {
@@ -24,7 +24,8 @@ exports.Canvas = class {
   }
 
   clear() {
-    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.context.fillStyle = "#FFFFFF";
+    this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
     this.context.setTransform(1, 0, 0, 1, 0, 0);
     this.context.textAlign = 'center';
     this.context.textBaseline = 'top';

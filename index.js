@@ -49,7 +49,7 @@ client.on("message", function (message) {
             const syntaxTree = Parser.parse(tokens);
             tree.draw(syntaxTree);
             const imgBuffer = tree.download();
-            const attachment = new MessageAttachment(imgBuffer);
+            const attachment = new MessageAttachment(imgBuffer, "syntax_tree.png");
             message.channel.send(null, attachment);
         } catch (err) {
             message.channel.send(err);
