@@ -1,10 +1,11 @@
-const { Client, MessageAttachment } = require("discord.js");
+const { Client, MessageAttachment, MessageEmbed } = require("discord.js");
 const config = require("./config");
 const Parser = require("./parser");
 const Tokenizer = require("./tokenizer");
 const Tree = require("./tree");
 const { createCanvas } = require('canvas');
 const canvas = createCanvas(100, 100);
+const strings = require("./strings.json");
 
 const client = new Client();
 const PREFIX = "!";
@@ -36,25 +37,53 @@ client.on("message", function (message) {
     const commandBody = message.content.slice(PREFIX.length);
     const args = commandBody.split(' ');
     const command = args.shift().toLowerCase();
-    const phrase = args.join(' ');
 
-    if (command === "tree") {
-        const tree = new Tree.Tree();
-        tree.setCanvas(canvas);
-
-        try {
-            const tokens = Tokenizer.tokenize(phrase);
-            validateTokens(tokens);
-
-            const syntaxTree = Parser.parse(tokens);
-            tree.draw(syntaxTree);
-            const imgBuffer = tree.download();
-            const attachment = new MessageAttachment(imgBuffer, "syntax_tree.png");
-            message.channel.send(null, attachment);
-        } catch (err) {
-            message.channel.send(err);
-        }
+    switch (command) {
+        case "tree":
+            const phrase = args.join(' ');
+            sendTree(message, phrase);
+            break;
+        case "help":
+            sendHelp(message);
+            break;
     }
 });
+
+client.on("ready", function () {
+    client.user.setPresence({
+        status: "online",
+        activity: {
+            name: "!help for info",
+            type: "PLAYING"
+        }
+    });
+});
+
+function sendTree(message, phrase) {
+    const tree = new Tree.Tree();
+    tree.setSubscript(false); // Turn off subscript numbers
+    tree.setCanvas(canvas);
+
+    try {
+        const tokens = Tokenizer.tokenize(phrase);
+        validateTokens(tokens);
+
+        const syntaxTree = Parser.parse(tokens);
+        tree.draw(syntaxTree);
+        const imgBuffer = tree.download();
+        const attachment = new MessageAttachment(imgBuffer, "syntax_tree.png");
+        message.channel.send(null, attachment);
+    } catch (err) {
+        message.channel.send(err);
+    }
+}
+
+function sendHelp(message) {
+    const embed = new MessageEmbed()
+        .setTitle("How I work")
+        .setColor("#47bdff")
+        .setDescription(strings.helpMessage);
+    message.channel.send(embed);
+}
 
 client.login(config.BOT_TOKEN);
