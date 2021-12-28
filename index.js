@@ -1,4 +1,4 @@
-const { Client, MessageAttachment, MessageEmbed } = require("discord.js");
+const { Client, Intents, MessageAttachment, MessageEmbed, SnowflakeUtil } = require("discord.js");
 const config = require("./config");
 const Parser = require("./parser");
 const Tokenizer = require("./tokenizer");
@@ -7,7 +7,9 @@ const { createCanvas } = require('canvas');
 const canvas = createCanvas(100, 100);
 const strings = require("./strings.json");
 
-const client = new Client();
+const intents = new Intents();
+intents.add([Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES]);
+const client = new Client({ intents: intents });
 const PREFIX = "!";
 
 function validateTokens(tokens) {
@@ -30,7 +32,7 @@ function countOpenBrackets(tokens) {
     return o;
 }
 
-client.on("message", function (message) {
+client.on("messageCreate", function (message) {
     if (message.author.bot) return;
     if (!message.content.startsWith(PREFIX)) return;
 
@@ -72,7 +74,7 @@ function sendTree(message, phrase) {
         tree.draw(syntaxTree);
         const imgBuffer = tree.download();
         const attachment = new MessageAttachment(imgBuffer, "syntax_tree.png");
-        message.channel.send(null, attachment);
+        message.channel.send({ files: [attachment] });
     } catch (err) {
         message.channel.send(err);
     }
@@ -83,7 +85,7 @@ function sendHelp(message) {
         .setTitle("How I work")
         .setColor("#47bdff")
         .setDescription(strings.helpMessage);
-    message.channel.send(embed);
+    message.channel.send({ embeds: [embed] });
 }
 
 client.login(config.BOT_TOKEN);
