@@ -1,5 +1,6 @@
 // jsSyntaxTree - A syntax tree graph generator
 // (c)2019 Andre Eisenbach <andre@ironcreek.net>
+// Modified 12/27/2021 by Brendan Moore <moorebrendanr@gmail.com>
 
 'use strict';
 
