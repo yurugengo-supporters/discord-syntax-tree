@@ -6,6 +6,7 @@ const Tree = require("./tree");
 const { createCanvas } = require('canvas');
 const canvas = createCanvas(100, 100);
 const strings = require("./strings.json");
+const { DiscordAPIError } = require("discord.js");
 
 const intents = new Intents();
 intents.add([Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES]);
@@ -37,6 +38,7 @@ client.on("interactionCreate", async function (interaction) {
 		switch (commandName) {
 			case "tree":
 				const phrase = interaction.options.getString("phrase");
+				console.log(phrase);
 				await sendTree(interaction, phrase);
 				break;
 			case "help":
@@ -59,20 +61,27 @@ client.on("ready", function () {
 
 async function sendTree(interaction, phrase) {
 	await interaction.deferReply();
-    const tree = new Tree.Tree();
-    tree.setSubscript(false); // Turn off subscript numbers
-    tree.setCanvas(canvas);
-
     try {
-        const tokens = Tokenizer.tokenize(phrase);
+		const tree = new Tree.Tree();
+		tree.setSubscript(false); // Turn off subscript numbers
+		tree.setCanvas(canvas);
+		const tokens = Tokenizer.tokenize(phrase);
         validateTokens(tokens);
-
         const syntaxTree = Parser.parse(tokens);
         tree.draw(syntaxTree);
         const imgBuffer = tree.download();
-        interaction.followUp({ attachment: imgBuffer });
+        interaction.followUp(
+			{
+				files:[{ attachment: imgBuffer }]
+			}
+		);
     } catch (err) {
-        interaction.followUp(err);
+		console.log(err);
+		if (err instanceof DiscordAPIError) {
+			interaction.followUp("DiscordAPIError");
+		} else {
+			interaction.followUp(err);
+		}
     }
 }
 
