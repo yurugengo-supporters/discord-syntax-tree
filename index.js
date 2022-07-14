@@ -1,4 +1,4 @@
-const { Client, Intents, MessageAttachment, MessageEmbed, SnowflakeUtil } = require("discord.js");
+const { Client, Intents, MessageEmbed } = require("discord.js");
 const config = require("./config");
 const Parser = require("./parser");
 const Tokenizer = require("./tokenizer");
@@ -10,7 +10,6 @@ const strings = require("./strings.json");
 const intents = new Intents();
 intents.add([Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES]);
 const client = new Client({ intents: intents });
-const PREFIX = "!";
 
 function validateTokens(tokens) {
     if (tokens.length < 3) throw 'Phrase too short';
@@ -32,36 +31,34 @@ function countOpenBrackets(tokens) {
     return o;
 }
 
-client.on("messageCreate", function (message) {
-    if (message.author.bot) return;
-    if (!message.content.startsWith(PREFIX)) return;
-
-    const commandBody = message.content.slice(PREFIX.length);
-    const args = commandBody.split(' ');
-    const command = args.shift().toLowerCase();
-
-    switch (command) {
-        case "tree":
-            const phrase = args.join(' ');
-            sendTree(message, phrase);
-            break;
-        case "help":
-            sendHelp(message);
-            break;
-    }
-});
+client.on("interactionCreate", async function (interaction) {
+	if (interaction.isCommand()){
+		const { commandName } = interaction;
+		switch (commandName) {
+			case "tree":
+				const phrase = interaction.options.getString("phrase");
+				await sendTree(interaction, phrase);
+				break;
+			case "help":
+				await sendHelp(interaction);
+				break;
+		}
+	}
+})
 
 client.on("ready", function () {
     client.user.setPresence({
         status: "online",
         activity: {
-            name: "!help for info",
+            name: "/help for info",
             type: "PLAYING"
         }
     });
+	console.log("ready");
 });
 
-function sendTree(message, phrase) {
+async function sendTree(interaction, phrase) {
+	await interaction.deferReply();
     const tree = new Tree.Tree();
     tree.setSubscript(false); // Turn off subscript numbers
     tree.setCanvas(canvas);
@@ -73,19 +70,19 @@ function sendTree(message, phrase) {
         const syntaxTree = Parser.parse(tokens);
         tree.draw(syntaxTree);
         const imgBuffer = tree.download();
-        const attachment = new MessageAttachment(imgBuffer, "syntax_tree.png");
-        message.channel.send({ files: [attachment] });
+        interaction.followUp({ attachment: imgBuffer });
     } catch (err) {
-        message.channel.send(err);
+        interaction.followUp(err);
     }
 }
 
-function sendHelp(message) {
+async function sendHelp(interaction) {
+	await interaction.deferReply();
     const embed = new MessageEmbed()
         .setTitle("How I work")
         .setColor("#47bdff")
         .setDescription(strings.helpMessage);
-    message.channel.send({ embeds: [embed] });
+	interaction.followUp({ embeds: [embed] });
 }
 
 client.login(config.BOT_TOKEN);

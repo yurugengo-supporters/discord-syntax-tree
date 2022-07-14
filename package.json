@@ -1,24 +1,24 @@
 {
   "name": "discord-syntax-tree",
-  "author": "Brendan Moore <moorebrendanr@gmail.com>",
+  "author": "BET pottle",
   "version": "1.0.0",
   "description": "A Discord bot which generates Syntax trees.",
   "license": "GPL-2.0",
   "main": "index.js",
   "engines": {
-    "node": "16.13.1",
-    "npm": "8.3.0"
+    "node": "16.14.2",
+    "npm": "8.5.0"
   },
   "scripts": {
     "start": "node index.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/moorebrendanr/discord-syntax-tree.git"
+    "url": "git+https://github.com/yurugengo-supporters/discord-syntax-tree.git"
   },
-  "homepage": "https://github.com/moorebrendanr/discord-syntax-tree#readme",
+  "homepage": "https://github.com/yurugengo-supporters/discord-syntax-tree#readme",
   "dependencies": {
-    "canvas": "^2.8.0",
-    "discord.js": "^13.4.0"
+    "canvas": "^2.9.3",
+    "discord.js": "^13.8.1"
   }
 }
