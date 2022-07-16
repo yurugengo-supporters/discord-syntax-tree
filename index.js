@@ -80,7 +80,7 @@ async function sendTree(interaction, phrase) {
 		if (err instanceof DiscordAPIError) {
 			interaction.followUp("DiscordAPIError");
 		} else {
-			interaction.followUp(err);
+			interaction.followUp("描画に失敗したけど心配しないで続けてください");
 		}
     }
 }
