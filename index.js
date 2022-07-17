@@ -112,7 +112,7 @@ client.on("interactionCreate", async function (interaction) {
 				if (color != null) {
 					b_color = new Boolean(color);
 				}
-				const subscript = interaction.options.getString("auto subscript");
+				const subscript = interaction.options.getString("auto_subscript");
 				if (subscript!=null) {
 					b_subscript = new Boolean(subscript);
 				}
