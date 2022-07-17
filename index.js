@@ -98,33 +98,25 @@ function countOpenBrackets(tokens) {
     return o;
 }
 
+function get_option_value(interaction, name, initial_value) {
+	const v = interaction.options.getString(name);
+	if (v == null) {
+		return initial_value;
+	}
+	return v.toLowerCase() === 'true';
+}
+
 client.on("interactionCreate", async function (interaction) {
 	if (interaction.isCommand()){
 		const { commandName } = interaction;
 		switch (commandName) {
 			case "tree":
 				const phrase = interaction.options.getString("phrase");
-				let b_color =true;
-				let b_subscript=false;
-				let b_triangles = true;
-				let b_align_bottom = true;
-				const color = interaction.options.getString("color");
-				if (color != null) {
-					b_color = new Boolean(color);
-				}
-				const subscript = interaction.options.getString("auto_subscript");
-				if (subscript!=null) {
-					b_subscript = new Boolean(subscript);
-				}
-				const triangles = interaction.options.getString("triangles");
-				if (triangles != null) {
-					b_triangles = new Boolean(triangles);
-				}
-				const align_bottom = interaction.options.getString("align_at_bottom");
-				if (align_bottom != null) {
-					b_align_bottom = new Boolean(align_bottom);
-				}
-				await sendTree(interaction, phrase, b_color, b_subscript, b_triangles, b_align_bottom);
+				let color = get_option_value(interaction,"color", true);
+				let subscript = get_option_value(interaction,"auto_subscript", false);
+				let triangles = get_option_value(interaction,"triangles", true);
+				let align_bottom = get_option_value(interaction,"align_at_bottom", true);
+				await sendTree(interaction, phrase, color, subscript, triangles, align_bottom);
 				break;
 			case "help":
 				await sendHelp(interaction);
