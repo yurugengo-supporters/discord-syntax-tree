@@ -12,14 +12,80 @@ const intents = new Intents();
 intents.add([Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES]);
 const client = new Client({ intents: intents });
 
+async function set_command(guild) {
+	const commands=[
+		{
+			name: "tree",
+			description: "文字列を樹形図に変換する",
+			options: [
+				{
+					type:"STRING",
+					name:"phrase",
+					description:"樹形図を表す文字列、[]を使ったやつ",
+					required:true,
+				},
+				{
+					type:"STRING",
+					name:"color",
+					description:"色",
+					choices: [
+						{ name: "ON", value: "true" },
+						{ name: "OFF", value: "false" },
+					],
+					required:false,
+				},
+				{
+					type:"STRING",
+					name:"auto_subscript",
+					description:"自動添え字",
+					choices: [
+						{ name: "ON", value: "true" },
+						{ name: "OFF", value: "false" },
+					],
+					required:false,
+				},
+				{
+					type:"STRING",
+					name:"triangles",
+					description:"三角",
+					choices: [
+						{ name: "ON", value: "true" },
+						{ name: "OFF", value: "false" },
+					],
+					required:false,
+				},	
+				{
+					type:"STRING",
+					name:"align_at_bottom",
+					description:"下寄せ",
+					choices: [
+						{ name: "ON", value: "true" },
+						{ name: "OFF", value: "false" },
+					],
+					required:false,
+				},	
+			],
+		},
+		{
+			name: "help",
+			description: "ヘルプ",
+		},
+	];
+	console.log("コマンドを登録しました:" + guild.id + "(" + guild.name + ")" );
+	await client.application.commands.set(commands, guild.id);
+}
+function ValidateTokensException(message) {
+	this.message = message;
+	this.name = 'ValidateTokensException';
+ }
 function validateTokens(tokens) {
-    if (tokens.length < 3) throw 'Phrase too short';
+    if (tokens.length < 3) throw new ValidateTokensException('Phrase too short');
     if (tokens[0].type !== Tokenizer.TokenType.BRACKET_OPEN ||
         tokens[tokens.length - 1].type !== Tokenizer.TokenType.BRACKET_CLOSE)
-        throw 'Phrase must start with [ and end with ]';
+        throw new ValidateTokensException( 'Phrase must start with [ and end with ]');
     const brackets = countOpenBrackets(tokens);
-    if (brackets > 0) throw brackets + ' bracket(s) open [';
-    if (brackets < 0) throw Math.abs(brackets) + ' too many closed bracket(s) ]';
+    if (brackets > 0) throw new ValidateTokensException(brackets + ' bracket(s) open [');
+    if (brackets < 0) throw new ValidateTokensException(Math.abs(brackets) + ' too many closed bracket(s) ]');
     return null;
 }
 
@@ -38,8 +104,27 @@ client.on("interactionCreate", async function (interaction) {
 		switch (commandName) {
 			case "tree":
 				const phrase = interaction.options.getString("phrase");
-				console.log(phrase);
-				await sendTree(interaction, phrase);
+				let b_color =true;
+				let b_subscript=false;
+				let b_triangles = true;
+				let b_align_bottom = true;
+				const color = interaction.options.getString("color");
+				if (color != null) {
+					b_color = new Boolean(color);
+				}
+				const subscript = interaction.options.getString("auto subscript");
+				if (subscript!=null) {
+					b_subscript = new Boolean(subscript);
+				}
+				const triangles = interaction.options.getString("triangles");
+				if (triangles != null) {
+					b_triangles = new Boolean(triangles);
+				}
+				const align_bottom = interaction.options.getString("align_at_bottom");
+				if (align_bottom != null) {
+					b_align_bottom = new Boolean(align_bottom);
+				}
+				await sendTree(interaction, phrase, b_color, b_subscript, b_triangles, b_align_bottom);
 				break;
 			case "help":
 				await sendHelp(interaction);
@@ -48,7 +133,7 @@ client.on("interactionCreate", async function (interaction) {
 	}
 })
 
-client.on("ready", function () {
+client.once("ready", async () => {
     client.user.setPresence({
         status: "online",
         activity: {
@@ -56,14 +141,30 @@ client.on("ready", function () {
             type: "PLAYING"
         }
     });
+	for (let guild of client.guilds.cache.values()) {
+		await set_command(guild);
+	}
 	console.log("ready");
 });
 
-async function sendTree(interaction, phrase) {
+client.on("guildCreate", async guild=>{
+	await set_command(guild);
+	console.log("guildCreate:" + guild.name);
+});
+
+async function sendTree(interaction, phrase, color, subscript, triangles,align_bottom) {
 	await interaction.deferReply();
+	console.log("phrase:" + phrase);
+	console.log("color:" + color.toString());
+	console.log("auto_subscript:" + subscript.toString());
+	console.log("triangles:" + triangles.toString());
+	console.log("align_at_bottom:" + align_bottom.toString());
     try {
 		const tree = new Tree.Tree();
-		tree.setSubscript(false); // Turn off subscript numbers
+		tree.setColor(color);
+		tree.setSubscript(subscript); 
+		tree.setTriangles(triangles);
+		tree.setAlignBottom(align_bottom);
 		tree.setCanvas(canvas);
 		const tokens = Tokenizer.tokenize(phrase);
         validateTokens(tokens);
@@ -78,9 +179,11 @@ async function sendTree(interaction, phrase) {
     } catch (err) {
 		console.log(err);
 		if (err instanceof DiscordAPIError) {
-			interaction.followUp("DiscordAPIError");
+			interaction.followUp("通信に失敗したけど心配しないで続けてください");
+		} else if (err instanceof ValidateTokensException) {
+			interaction.followUp(err.message);
 		} else {
-			interaction.followUp("描画に失敗したけど心配しないで続けてください");
+			interaction.followUp("何か失敗したけど心配しないで続けてください");
 		}
     }
 }
