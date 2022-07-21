@@ -15,6 +15,7 @@
   "homepage": "https://github.com/yurugengo-supporters/discord-syntax-tree#readme",
   "dependencies": {
     "canvas": "^2.9.3",
-    "discord.js": "^13.8.1"
+    "discord.js": "^13.8.1",
+    "dotenv": "^16.0.1"
   }
 }

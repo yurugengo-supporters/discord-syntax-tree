@@ -1,5 +1,5 @@
 const { Client, Intents, MessageEmbed } = require("discord.js");
-const config = require("./config");
+require('dotenv').config();
 const Parser = require("./parser");
 const Tokenizer = require("./tokenizer");
 const Tree = require("./tree");
@@ -24,6 +24,52 @@ async function set_command(guild) {
 					description:"樹形図を表す文字列、[]を使ったやつ",
 					required:true,
 				},
+				{
+					type:"STRING",
+					name:"color",
+					description:"色",
+					choices: [
+						{ name: "ON", value: "true" },
+						{ name: "OFF", value: "false" },
+					],
+					required:false,
+				},
+				{
+					type:"STRING",
+					name:"auto_subscript",
+					description:"自動添え字",
+					choices: [
+						{ name: "ON", value: "true" },
+						{ name: "OFF", value: "false" },
+					],
+					required:false,
+				},
+				{
+					type:"STRING",
+					name:"triangles",
+					description:"三角",
+					choices: [
+						{ name: "ON", value: "true" },
+						{ name: "OFF", value: "false" },
+					],
+					required:false,
+				},	
+				{
+					type:"STRING",
+					name:"align_at_bottom",
+					description:"下寄せ",
+					choices: [
+						{ name: "ON", value: "true" },
+						{ name: "OFF", value: "false" },
+					],
+					required:false,
+				},	
+			],
+		},
+		{
+			name: "tree2",
+			description: "直前の投稿を樹形図に変換する",
+			options: [
 				{
 					type:"STRING",
 					name:"color",
@@ -111,12 +157,26 @@ client.on("interactionCreate", async function (interaction) {
 		const { commandName } = interaction;
 		switch (commandName) {
 			case "tree":
-				const phrase = interaction.options.getString("phrase");
-				let color = get_option_value(interaction,"color", true);
-				let subscript = get_option_value(interaction,"auto_subscript", false);
-				let triangles = get_option_value(interaction,"triangles", true);
-				let align_bottom = get_option_value(interaction,"align_at_bottom", true);
-				await sendTree(interaction, phrase, color, subscript, triangles, align_bottom);
+				{
+					const phrase = interaction.options.getString("phrase");
+					let color = get_option_value(interaction,"color", true);
+					let subscript = get_option_value(interaction,"auto_subscript", false);
+					let triangles = get_option_value(interaction,"triangles", true);
+					let align_bottom = get_option_value(interaction,"align_at_bottom", true);
+					await sendTree(interaction, phrase, color, subscript, triangles, align_bottom);
+				}
+				break;
+			case "tree2":
+				{
+					const fetched = await interaction.channel.messages.fetch({before : interaction.id, limit:1});
+					const before = fetched.values().next().value;
+					const phrase = before.content;
+					let color = get_option_value(interaction,"color", true);
+					let subscript = get_option_value(interaction,"auto_subscript", false);
+					let triangles = get_option_value(interaction,"triangles", true);
+					let align_bottom = get_option_value(interaction,"align_at_bottom", true);
+					await sendTree(interaction, phrase, color, subscript, triangles, align_bottom);
+				}
 				break;
 			case "help":
 				await sendHelp(interaction);
@@ -189,4 +249,4 @@ async function sendHelp(interaction) {
 	interaction.followUp({ embeds: [embed] });
 }
 
-client.login(config.BOT_TOKEN);
+client.login(process.env.BOT_TOKEN);
