@@ -1,4 +1,5 @@
-const { Client, Intents, MessageEmbed } = require("discord.js");
+const { Client, GatewayIntentBits, Partials, InteractionType } = require("discord.js");
+const {MessageEmbed,ApplicationCommandOptionType, ModalBuilder, TextInputBuilder, ActionRowBuilder, TextInputStyle} = require("discord.js");
 require('dotenv').config();
 const Parser = require("./parser");
 const Tokenizer = require("./tokenizer");
@@ -8,109 +9,13 @@ const canvas = createCanvas(100, 100);
 const strings = require("./strings.json");
 const { DiscordAPIError } = require("discord.js");
 
-const intents = new Intents();
-intents.add([Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES]);
-const client = new Client({ intents: intents });
+const client = new Client({ intents: [GatewayIntentBits.Guilds], partials: [Partials.Channel] });
 
 async function set_command(guild) {
 	const commands=[
 		{
 			name: "tree",
 			description: "文字列を樹形図に変換する",
-			options: [
-				{
-					type:"STRING",
-					name:"phrase",
-					description:"樹形図を表す文字列、[]を使ったやつ",
-					required:true,
-				},
-				{
-					type:"STRING",
-					name:"color",
-					description:"色",
-					choices: [
-						{ name: "ON", value: "true" },
-						{ name: "OFF", value: "false" },
-					],
-					required:false,
-				},
-				{
-					type:"STRING",
-					name:"auto_subscript",
-					description:"自動添え字",
-					choices: [
-						{ name: "ON", value: "true" },
-						{ name: "OFF", value: "false" },
-					],
-					required:false,
-				},
-				{
-					type:"STRING",
-					name:"triangles",
-					description:"三角",
-					choices: [
-						{ name: "ON", value: "true" },
-						{ name: "OFF", value: "false" },
-					],
-					required:false,
-				},	
-				{
-					type:"STRING",
-					name:"align_at_bottom",
-					description:"下寄せ",
-					choices: [
-						{ name: "ON", value: "true" },
-						{ name: "OFF", value: "false" },
-					],
-					required:false,
-				},	
-			],
-		},
-		{
-			name: "tree2",
-			description: "直前の投稿を樹形図に変換する",
-			options: [
-				{
-					type:"STRING",
-					name:"color",
-					description:"色",
-					choices: [
-						{ name: "ON", value: "true" },
-						{ name: "OFF", value: "false" },
-					],
-					required:false,
-				},
-				{
-					type:"STRING",
-					name:"auto_subscript",
-					description:"自動添え字",
-					choices: [
-						{ name: "ON", value: "true" },
-						{ name: "OFF", value: "false" },
-					],
-					required:false,
-				},
-				{
-					type:"STRING",
-					name:"triangles",
-					description:"三角",
-					choices: [
-						{ name: "ON", value: "true" },
-						{ name: "OFF", value: "false" },
-					],
-					required:false,
-				},	
-				{
-					type:"STRING",
-					name:"align_at_bottom",
-					description:"下寄せ",
-					choices: [
-						{ name: "ON", value: "true" },
-						{ name: "OFF", value: "false" },
-					],
-					required:false,
-				},	
-			],
 		},
 		{
 			name: "help",
@@ -144,43 +49,82 @@ function countOpenBrackets(tokens) {
     return o;
 }
 
-function get_option_value(interaction, name, initial_value) {
-	const v = interaction.options.getString(name);
+function get_option_value2(interaction, name, initial_value) {
+	const v = interaction.fields.getTextInputValue(name);
 	if (v == null) {
 		return initial_value;
 	}
-	return v.toLowerCase() === 'true';
+	return v.toLowerCase() === '1';
 }
+function _createModal(phrase) {
+	const modal = new ModalBuilder()
+	.setCustomId("form")
+	.setTitle('Yuru-Syntax-Tree');
+	const row1 = new ActionRowBuilder().addComponents(
+		new TextInputBuilder()
+		.setCustomId('phrase')
+		.setLabel("phrase")
+		.setValue(phrase)
+		.setStyle(TextInputStyle.Paragraph)
+	);
+	const row2 = new ActionRowBuilder().addComponents(
+		new TextInputBuilder()
+		.setCustomId('color')
+		.setLabel("color")
+		.setStyle(TextInputStyle.Short)
+		.setMaxLength(1).setMinLength(1)
+		.setValue("1")
+	);
+	const row3= new ActionRowBuilder().addComponents(
+		new TextInputBuilder()
+		.setCustomId('auto_subscript')
+		.setLabel("auto_subscript")
+		.setStyle(TextInputStyle.Short)
+		.setMaxLength(1).setMinLength(1)
+		.setValue("0")
+	);
+	const row4= new ActionRowBuilder().addComponents(
+		new TextInputBuilder()
+		.setCustomId('triangles')
+		.setLabel("triangles")
+		.setStyle(TextInputStyle.Short)
+		.setMaxLength(1).setMinLength(1)
+		.setValue("1")
+	);
+	const row5= new ActionRowBuilder().addComponents(
+		new TextInputBuilder()
+		.setCustomId('align_at_bottom')
+		.setLabel("align_at_bottom")
+		.setStyle(TextInputStyle.Short)
+		.setMaxLength(1).setMinLength(1)
+		.setValue("1")
+	);
 
+	modal.addComponents( row1,row2,row3,row4, row5);
+	return modal;
+}
 client.on("interactionCreate", async function (interaction) {
-	if (interaction.isCommand()){
+	if (interaction.type == InteractionType.ApplicationCommand){
 		const { commandName } = interaction;
 		switch (commandName) {
 			case "tree":
 				{
-					const phrase = interaction.options.getString("phrase");
-					let color = get_option_value(interaction,"color", true);
-					let subscript = get_option_value(interaction,"auto_subscript", false);
-					let triangles = get_option_value(interaction,"triangles", true);
-					let align_bottom = get_option_value(interaction,"align_at_bottom", true);
-					await sendTree(interaction, phrase, color, subscript, triangles, align_bottom);
-				}
-				break;
-			case "tree2":
-				{
-					const fetched = await interaction.channel.messages.fetch({before : interaction.id, limit:1});
-					const before = fetched.values().next().value;
-					const phrase = before.content;
-					let color = get_option_value(interaction,"color", true);
-					let subscript = get_option_value(interaction,"auto_subscript", false);
-					let triangles = get_option_value(interaction,"triangles", true);
-					let align_bottom = get_option_value(interaction,"align_at_bottom", true);
-					await sendTree(interaction, phrase, color, subscript, triangles, align_bottom);
+					interaction.showModal(_createModal("[S [NP jsSyntaxTree][VP [V creates][NP nice syntax trees ->1]]]"));
 				}
 				break;
 			case "help":
 				await sendHelp(interaction);
 				break;
+		}
+	}
+	if (interaction.type == InteractionType.ModalSubmit) {
+		if (interaction.customId=="form") {
+			const phrase = interaction.fields.getTextInputValue('phrase');
+			let color = get_option_value2(interaction,"color", true);
+			let subscript = get_option_value2(interaction,"auto_subscript", false);
+			let triangles = get_option_value2(interaction,"triangles", true);
+			let align_bottom = get_option_value2(interaction,"align_at_bottom", true);
+			await sendTree(interaction, phrase, color, subscript, triangles, align_bottom);
 		}
 	}
 })
@@ -206,11 +150,7 @@ client.on("guildCreate", async guild=>{
 
 async function sendTree(interaction, phrase, color, subscript, triangles,align_bottom) {
 	await interaction.deferReply();
-	console.log("phrase:" + phrase);
-	console.log("color:" + color.toString());
-	console.log("auto_subscript:" + subscript.toString());
-	console.log("triangles:" + triangles.toString());
-	console.log("align_at_bottom:" + align_bottom.toString());
+	const phrase2 = phrase.replace(/\r?\n/g, ' ');
     try {
 		const tree = new Tree.Tree();
 		tree.setColor(color);
@@ -218,13 +158,14 @@ async function sendTree(interaction, phrase, color, subscript, triangles,align_b
 		tree.setTriangles(triangles);
 		tree.setAlignBottom(align_bottom);
 		tree.setCanvas(canvas);
-		const tokens = Tokenizer.tokenize(phrase);
+		const tokens = Tokenizer.tokenize(phrase2);
         validateTokens(tokens);
         const syntaxTree = Parser.parse(tokens);
         tree.draw(syntaxTree);
         const imgBuffer = tree.download();
         interaction.followUp(
 			{
+				content:phrase,
 				files:[{ attachment: imgBuffer }]
 			}
 		);
